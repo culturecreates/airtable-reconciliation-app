@@ -1,0 +1,54 @@
+.App {
+    font-family: sans-serif;
+    text-align: center;
+  }
+  
+  .well {
+    background: #eeefff;
+    margin-left: 30%;
+    margin-right: 30%;
+  }
+  
+  .tab {
+    background: transparent;
+    /* padding: 5px 15px; */
+    color: #1122ff;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .tab-content {
+    padding: 1px 1px;
+  }
+  
+  .tab.active {
+    background: #fff;
+    color: #000;
+    border: 1px solid #ddd;
+  }
+  
+  .nav-tabs {
+    margin-left: 1%;
+    /* margin-right: 1%; */
+  }
+  
+  .add-tab-button {
+    background: none;
+    border: none;
+  }
+  
+  .edit-mode-button {
+    background: #1122ff;
+    color: #fff;
+  }
+  
+  .save-button {
+    background: green;
+    color: #fff;
+  }
+  
+  .edit-tab-name {
+    background: #1122ff;
+    color: #fff;
+  }
+  
