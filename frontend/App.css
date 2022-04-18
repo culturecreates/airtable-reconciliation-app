@@ -1,0 +1,80 @@
+* {
+  box-sizing: border-box;
+}
+
+/* Style the body */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+/* Header/logo Title */
+.header {
+  padding: 3% 3%;
+  text-align: center;
+  background: #a56464;
+  color: white;
+  margin-left: 30%;
+  margin-right: 30%;
+  margin-top: 3%;
+  border: black;
+  width: 40%;
+}
+
+/* Increase the font size of the heading */
+.header h1 {
+  fontSize: 40px;
+}
+
+.h3 {
+  fontSize: 20px;
+  color: rgb(243, 97, 97);
+}
+
+/* Style the navigation bar links */
+.content {
+  float: left;
+  display: block;
+  color: black;
+  text-align: center;
+  padding: 2% 50%;
+  textDecoration: none;
+  lineHeight: 3;
+  /* margin-left: 30%; */
+  /* margin-right: 30%; */
+  background-color: rgb(240, 237, 237);
+  width: max-content;
+}
+
+.tab-content {
+  float: left;
+  display: block;
+  color: black;
+  text-align: center;
+  padding: 2% 10%;
+  text-decoration: none;
+  lineHeight: 3;
+  width: 100%;
+  /* margin-left: 30%; */
+  /* margin-right: 30%; */
+  background-color: rgb(240, 237, 237);
+}
+
+.row {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.button1 {
+  fontSize: 75%;
+  height: 75%;
+}
+
+.button2 {
+  text-align: center;
+  width: 50%;
+  background-color: #a56464;
+  border-radius: 12px;
+}
