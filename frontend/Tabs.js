@@ -19,7 +19,6 @@ function TabComponent() {
     };
 
     function handleEditTabName(e) {
-        alert("here")
         const updatedTabs = tabs.map(tab => {
             return tab;
         });
@@ -35,7 +34,7 @@ function TabComponent() {
         });
 
         allTabs.push(
-            <Tab key={1234} eventKey={'addTab'} title={'+'} onClick={handleAddTab} onDoubleClick={handleDoubleClick}>
+            <Tab key={'addTab'} eventKey={'addTab'} title={'+'} onClick={handleAddTab} onDoubleClick={handleDoubleClick}>
             </Tab>
         )
 
@@ -53,11 +52,11 @@ function TabComponent() {
         return content;
     };
 
-    function handleSelectTab(tab) {
-        if (tab === 'addTab') {
+    function handleSelectTab(key) {
+        if (key === 'addTab') {
             handleAddTab();
         } else {
-            setKey(tab)
+            setKey(key)
         }
     };
 
