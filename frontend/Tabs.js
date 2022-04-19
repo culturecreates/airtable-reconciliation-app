@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import uuid from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 import { ArtsdataReconciliationApp } from "./ReconciliationApp";
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
@@ -10,7 +10,7 @@ function TabComponent() {
 
 
     const [tabs, setTabs] = useState([
-        { id: 1, name: "Tab 1", content: <ArtsdataReconciliationApp /> }
+        { id: uuidv4(), name: "Tab 1", content: <ArtsdataReconciliationApp /> }
     ])
     const [key, setKey] = useState(tabs[0].id);
 
@@ -63,7 +63,7 @@ function TabComponent() {
 
     function handleAddTab() {
         const newTabObject = {
-            id: uuid(),
+            id: uuidv4(),
             name: `Tab ${tabs.length + 1}`,
             content: <ArtsdataReconciliationApp />
         };
