@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { ArtsdataReconciliationApp } from "./ReconciliationApp";
 import Tab from 'react-bootstrap/Tab'
@@ -17,21 +17,33 @@ function TabComponent() {
         setEditableTab(key);
     };
 
-    function handleEditTabName(e) {
-        const updatedTabs = tabs.map(tab => {
-            return tab;
-        });
-
-        setTabs(updatedTabs);
+    function handleEditTabName(tabName) {
+        if (!!tabName?.trim()) {
+            const isTabNameExist = tabs.find(tab => tab.name === tabName?.trim());
+            const updatedTabs = tabs.map(tab => {
+                if (editableTab === tab.id && !isTabNameExist) {
+                    tab.name = tabName;
+                    return tab;
+                }
+                return tab;
+            });
+            setTabs(updatedTabs);
+        }
+        setEditableTab(null);
     };
 
     function createTabs() {
         const allTabs = tabs.map(tab => {
             if (editableTab === tab.id) {
-                return (<input />)
+                return (
+                    <Tab key={tab.id}
+                        eventKey={tab.id}
+                        title={<input type="text" name="name" placeholder={tab.name} onBlur={e => handleEditTabName(e.target.value)} />}>
+                        {tab.content}
+                    </Tab>)
             }
             return (
-                <Tab key={tab.id} eventKey={tab.id} title={tab.name} onDoubleClick={() => handleDoubleClick(tab.id)}>
+                <Tab key={tab.id} eventKey={tab.id} title={tab.name} >
                     {tab.content}
                 </Tab>
             );
@@ -48,7 +60,7 @@ function TabComponent() {
                 onSelect={handleSelectTab}
                 defaultActiveKey={tabs[0].id}
                 className="mb-3"
-            // onDoubleClick={() => handleDoubleClick(key)}
+                onDoubleClick={() => handleDoubleClick(key)}
             >
                 {allTabs}
             </Tabs>

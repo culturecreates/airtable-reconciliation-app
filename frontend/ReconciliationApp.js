@@ -1,5 +1,5 @@
 import { useBase, Icon, useRecords, TablePicker, FieldPicker, Select } from '@airtable/blocks/ui';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProgressBar from 'react-bootstrap/ProgressBar'
 import { Col, Container, Form, Row } from 'react-bootstrap';
@@ -33,30 +33,36 @@ function ArtsdataReconciliationApp() {
 
     const [tableSelected, setTableSelected] = useState(null);
     const [entityNameField, setEntityNameField] = useState(null);
-    const [shouldReconcileAlways, setReconcileAlways] = useState(false);
     const [resultField, setResultField] = useState(null);
     const [table, setTable] = useState(null);
-    const [isTableNameEmpty, setIsTableNameEmpty] = useState(true);
+    const [fetchTable, setFetchTable] = useState(true);
     const [entityType, setEntityType] = useState('Organization');
     const [endPoint, setEndPoint] = useState(endpointOptions[0].value);
-    const [reconciliationProgress, setReconcliationProgress] = useState(0);
     const [isUpdateInProgress, setUpdateInProgress] = useState(false);
-    const [totalRecordCount, setTotalRecordCount] = useState(0);
     const [currentProcessId, setCurrentProcessId] = useState(null);
 
     let [trueMatchCount, setTrueMatchCount] = useState(0);
     let [unmatchedCount, setUnmatchedCount] = useState(0);
     let [multiMatchCount, setMultiMatchCount] = useState(0);
     let [multiMatchPercentage, setMultiMatchPercentage] = useState(0);
+    const [reconciliationProgress, setReconcliationProgress] = useState(0);
 
 
-    if (!!tableSelected && isTableNameEmpty) {
-        setIsTableNameEmpty(false);
+    useEffect(() => {
+        setEntityNameField(null);
+        setResultField(null);
+        setFetchTable(true);
+        clearStats();
+    }, [tableSelected])
+
+
+    if (!!tableSelected && fetchTable) {
+        setFetchTable(false);
         setTable(base.getTableByName(tableSelected.name));
     }
 
     const records = useRecords(table);
-    const permissionCheck = (!!tableSelected && !!entityNameField && !!entityType && !!resultField) &&
+    const permissionCheck = (!!tableSelected && !!entityNameField && !!entityType && !!resultField && !isUpdateInProgress) &&
         table.checkPermissionsForUpdateRecord(undefined, { [resultField.name]: undefined });
 
     function setReconciliationActiveStatus(processId, status) {
@@ -78,6 +84,7 @@ function ArtsdataReconciliationApp() {
         const processId = currentProcessId;
         setReconciliationActiveStatus(processId, false);
         setUpdateInProgress(false);
+        clearStats();
         console.log(`Reconciliation process cancelled.`)
     }
 
@@ -113,7 +120,7 @@ function ArtsdataReconciliationApp() {
                 setTrueMatchCount(trueMatchCounts);
                 setMultiMatchCount(multiMatchesCounts);
                 setUnmatchedCount(noMatchesCounts);
-                setMultiMatchPercentage((multiMatchesCounts / totalRecordCount) * 100);
+                setMultiMatchPercentage(((multiMatchesCounts / recordCount) * 100).toFixed(2));
             } catch (error) {
                 console.error(`Error occured during reconcilation.
                 error: ${error}
@@ -184,21 +191,17 @@ function ArtsdataReconciliationApp() {
         await table.updateRecordsAsync(recordUpdates);
     }
 
+    function clearStats() {
+        setTrueMatchCount(0);
+        setMultiMatchCount(0);
+        setUnmatchedCount(0);
+        setMultiMatchPercentage(0);
+    }
+
     return (
         <Container className='content' >
             <Form className='form'>
-                <Row >
-                    <Col><Icon name="chevronRight" size={16} /></Col>
-                    <Col >
-                        <Select
-                            options={endpointOptions}
-                            value={endPoint}
-                            onChange={endPoint => setEndPoint(endPoint)}
-                            width="550px"
-                            size="large"
 
-                        /></Col>
-                </Row>
                 <Row >
                     <Col sm={4}>Table</Col>
                     <Col sm={8}>
@@ -227,6 +230,18 @@ function ArtsdataReconciliationApp() {
                         </Col>
                     </Row>
                 ) : (<></>)}
+                <Row >
+                    <Col><Icon name="chevronRight" size={16} /></Col>
+                    <Col >
+                        <Select
+                            options={endpointOptions}
+                            value={endPoint}
+                            onChange={endPoint => setEndPoint(endPoint)}
+                            width="550px"
+                            size="large"
+
+                        /></Col>
+                </Row>
 
                 <Row onChange={onChangeEntityType} style={{ lineHeight: "1.5", paddingTop: "1.5px" }}  >
                     <Col sm={4}>Type</Col>
@@ -282,13 +297,13 @@ function ArtsdataReconciliationApp() {
                 (isUpdateInProgress) ? (
                     <div style={{ lineHeight: '2' }}>
                         <Row className="justify-content-md-center">
-                            <Col md={{ span: 8 }}><ProgressBar animated now={reconciliationProgress} /></Col>
-                            <Col md={{ span: 1 }} className='clickableText' onClick={onCancelReconciliation} >Cancel</Col>
+                            <Col md={{ span: 10 }}><ProgressBar animated now={reconciliationProgress} /></Col>
+                            <Col md={{ span: 2 }} className='clickableText' onClick={onCancelReconciliation} >Cancel</Col>
                         </Row>
                         <Row className="justify-content-md-center">{reconciliationProgress}%</Row>
                         <Container >
                             <Row style={{ 'textAlign': 'left' }}>
-                                <Col style={{ 'textAlign': 'left', 'marginLeft': '50px' }}>
+                                <Col style={{ 'textAlign': 'left', 'marginLeft': '200px' }}>
                                     <Row >
                                         <Col sm={3}>{trueMatchCount}</Col>
                                         <Col sm={9}> matched</Col>
@@ -300,10 +315,6 @@ function ArtsdataReconciliationApp() {
                                     <Row >
                                         <Col sm={3}>{multiMatchCount}</Col>
                                         <Col sm={9}> multiple candidates </Col>
-                                    </Row>
-                                    <Row >
-                                        <Col sm={3}>{multiMatchPercentage}</Col>
-                                        <Col sm={9}> multiMatchPercentage </Col>
                                     </Row>
                                 </Col>
                             </Row>
