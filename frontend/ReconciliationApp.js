@@ -1,18 +1,13 @@
-import { useBase, Icon, Box, useRecords, TablePicker, FieldPicker, Select } from '@airtable/blocks/ui';
-import React, { useState, useEffect } from 'react';
+import { useBase, Icon, useRecords, TablePicker, FieldPicker, Select } from '@airtable/blocks/ui';
+import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProgressBar from 'react-bootstrap/ProgressBar'
-import { Col, Container, Row } from 'react-bootstrap';
+import { Col, Container, Form, Row } from 'react-bootstrap';
+import { v4 as uuidv4 } from 'uuid';
 
-const clickableText = {
-    color: 'blue', 'textDecoration': 'underline', cursor: 'pointer', 'fontSize': '90%', 'lineHeight': 4
-}
+const batchSize = 10;
+window.reconciliationProcessActive = [];
 
-const stats = {
-    span: 1, offset: 4
-}
-
-let reconActive = false;
 
 function ArtsdataReconciliationApp() {
 
@@ -21,6 +16,20 @@ function ArtsdataReconciliationApp() {
     const endpointOptions = [
         { value: "ArtsData.ca", label: "Artsdata.ca Reconciliation Service" }
     ];
+
+    const headersRequest = {
+        "accept": "*/*",
+        "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+        "if-none-match": "W/\"ad470517ef67dbaa1eac01387aed83f4\"",
+        "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"99\", \"Google Chrome\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Linux\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://reconciliation-api.github.io/",
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+    };
 
     const [tableSelected, setTableSelected] = useState(null);
     const [entityNameField, setEntityNameField] = useState(null);
@@ -31,13 +40,15 @@ function ArtsdataReconciliationApp() {
     const [entityType, setEntityType] = useState('Organization');
     const [endPoint, setEndPoint] = useState(endpointOptions[0].value);
     const [reconciliationProgress, setReconcliationProgress] = useState(0);
-    const [isReconciliationActive, setReconciliationActive] = useState(false);
+    const [isUpdateInProgress, setUpdateInProgress] = useState(false);
+    const [totalRecordCount, setTotalRecordCount] = useState(0);
+    const [currentProcessId, setCurrentProcessId] = useState(null);
 
     let [trueMatchCount, setTrueMatchCount] = useState(0);
     let [unmatchedCount, setUnmatchedCount] = useState(0);
     let [multiMatchCount, setMultiMatchCount] = useState(0);
     let [multiMatchPercentage, setMultiMatchPercentage] = useState(0);
-    
+
 
     if (!!tableSelected && isTableNameEmpty) {
         setIsTableNameEmpty(false);
@@ -48,180 +59,43 @@ function ArtsdataReconciliationApp() {
     const permissionCheck = (!!tableSelected && !!entityNameField && !!entityType && !!resultField) &&
         table.checkPermissionsForUpdateRecord(undefined, { [resultField.name]: undefined });
 
+    function setReconciliationActiveStatus(processId, status) {
+        window.reconciliationProcessActive[processId] = status
+    }
+
     async function onButtonClick() {
+        const processId = `reconcile_` + uuidv4();
+        setCurrentProcessId(processId);
         console.log("Reconciliation started")
-        reconActive = true;
-        setReconciliationActive(true);
-        await reconcileAndExtractArtsdataIds(table, records, entityNameField, resultField, entityType)
-        reconActive = false;
-        console.log("Reconciliation completed")
+        setReconciliationActiveStatus(processId, true);
+        setUpdateInProgress(true);
+        await reconcileAndExtractArtsdataIds(processId, table, records, entityNameField, resultField, entityType);
+        setReconciliationActiveStatus(processId, false);
+        setUpdateInProgress(false);
     }
 
     function onCancelReconciliation() {
-        setReconciliationActive(false);
-        reconActive = false;
-        alert(`Aborting reconciliation`)
+        const processId = currentProcessId;
+        setReconciliationActiveStatus(processId, false);
+        setUpdateInProgress(false);
+        console.log(`Reconciliation process cancelled.`)
     }
 
     function onChangeEntityType(event) {
         setEntityType(event.target.value);
     }
 
-    return (
-        <Box
-            flex="none"
-            display="flex"
-            flexDirection="column"
-            width="300px"
-            backgroundColor="white"
-        >
-            <Container fluid="sm" className='content' >
-                <form>
-                    <Row className="justify-content-md-center" >
-                        <Col xs="auto"><Icon name="chevronRight" size={16} /></Col>
-                        <Col xs="auto">
-                            <Select
-                                options={endpointOptions}
-                                value={endPoint}
-                                onChange={endPoint => setEndPoint(endPoint)}
-                                width="270px"
-                                marginLeft={"2px"}
-                                size="large"
-                            /></Col>
-                    </Row>
-                    <Row className="justify-content-md-center">
-                        <Col xs="auto">Table</Col>
-                        <Col xs="auto">
-                            <TablePicker
-                                placeholder='Select a table'
-                                table={tableSelected}
-                                onChange={newTable => setTableSelected(newTable)}
-                                width="240px"
-                                size="large"
-                            />
-                        </Col>
-                    </Row>
-                    {tableSelected ? (
-                        <Row className="justify-content-md-center">
-                            <Col xs="auto">Name</Col>
-                            <Col xs="auto">
-                                <FieldPicker
-                                    placeholder='Select a field'
-                                    table={table}
-                                    field={entityNameField}
-                                    onChange={newField => setEntityNameField(newField)}
-                                    width="240px"
-                                    size="large"
-                                />
-                            </Col>
-                        </Row>
-                    ) : (<></>)}
 
-                    <Row onChange={onChangeEntityType}  >
-                        <Col md={{ span: 1, offset: 3 }}>Type</Col>
-                        <Col>
-                            <Row > <Col md={{ span: 3 }}><input type="radio" value="Person" name="entityType" /></Col> Person </Row>
-                            <Row > <Col md={{ span: 3 }}><input type="radio" value="Place" name="entityType" /></Col> Place </Row>
-                            <Row > <Col md={{ span: 3 }}><input defaultChecked type="radio" value="Organization" name="entityType" /></Col > Organization </Row>
-                        </Col>
-                    </Row>
-                    <Row className="justify-content-md-center">
-                        <Col xs="auto">Properties</Col>
-                        <Col md={{ span: 2, offset: 2 }}><button className='button1' type="button" disabled={true}>Add property</button></Col>
-                    </Row>
-                    {tableSelected ? (
-                        <Row className="justify-content-md-center" >
-                            <Col xs="auto" >Result </Col>
-                            <Col xs="auto">
-                                <FieldPicker
-                                    placeholder='Select a field'
-                                    table={table}
-                                    field={resultField}
-                                    onChange={result => setResultField(result)}
-                                    width="230px"
-                                    size="large"
-                                />
-                            </Col>
-                        </Row>
-                    ) : (<></>)}
-                    <Row className="justify-content-md-center" >
-                        <Col xs="auto"><input type="checkbox" onChange={value => setReconcileAlways(value)} /></Col>
-                        <Col xs="auto">Keep reconciled at all times</Col>
-                    </Row>
-                    <br />
-                    <Row className="justify-content-md-center" xs lg="1">
-                        <Col><button onClick={onButtonClick}
-                            disabled={!permissionCheck.hasPermission}
-                            type="button"> Reconcile</button></Col>
-                    </Row>
-                    {!permissionCheck.hasPermission && permissionCheck.reasonDisplayString}
-                </form >
-                <br />
-                {
-                    (reconActive) ? (
-                        <div>
-                            <Row className="justify-content-md-center">
-                                <Col md={{ span: 8 }}><ProgressBar animated now={reconciliationProgress} /></Col>
-                                <Col md={{ span: 1 }} style={clickableText} onClick={onCancelReconciliation} >Cancel</Col>
-                            </Row>
-                            <Row className="justify-content-md-center">{reconciliationProgress}%</Row>
-                            <Container >
-                                <Row >
-                                    <Col className="justify-content-md-center-left">
-                                        <Row >
-                                            <Col md={stats}>{trueMatchCount}</Col>
-                                            <Col xs="auto"> matched</Col>
-                                        </Row>
-                                        <Row >
-                                            <Col md={stats} >{unmatchedCount}</Col>
-                                            <Col xs="auto"> not matched</Col>
-                                        </Row>
-                                        <Row >
-                                            <Col md={stats}>{multiMatchCount}</Col>
-                                            <Col xs="auto"> multiple candidates </Col>
-                                        </Row>
-                                    </Col>
-                                </Row>
-                                <br />
-                                {(multiMatchPercentage > 10) ? (
-                                    <Row>
-                                        <Col>
-                                            <h3 className='h3'>Please add properties to increase matches</h3>
-                                        </Col>
-                                    </Row>) : (<></>)}
-                            </Container>
-                        </div>
-                    ) : (<></>)
-                }
-            </Container>
-        </Box >
-    );
-
-    async function reconcileAndExtractArtsdataIds(table, records, entityNameField, artsdataIdField, entityType) {
+    async function reconcileAndExtractArtsdataIds(processId, table, records, entityNameField, artsdataIdField, entityType) {
+        let trueMatchCounts = 0;
+        let multiMatchesCounts = 0;
+        let noMatchesCounts = 0;
         const entityNames = records.map(record => record.getCellValueAsString(entityNameField))
-        const headersRequest = {
-            "accept": "*/*",
-            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-            "if-none-match": "W/\"ad470517ef67dbaa1eac01387aed83f4\"",
-            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"99\", \"Google Chrome\";v=\"99\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Linux\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "cross-site",
-            "Referer": "https://reconciliation-api.github.io/",
-            "Referrer-Policy": "strict-origin-when-cross-origin"
-        };
-        let trueMatches = [];
-        const batchSize = 10;
         let offset = 0;
-        const totalNames = entityNames.length;
+        let recordCount = entityNames.length;
         setReconcliationProgress(0);
-        while (isReconciliationActive) {
-            if (!reconActive) {
-                alert("Aborting reconciliation")
-                return;
-            }
+
+        while (window.reconciliationProcessActive?.[processId]) {
             console.log(`Reconciling ${offset} to ${offset + batchSize}`)
             const currentNames = entityNames.slice(offset, offset + batchSize);
             const currentRecords = records.slice(offset, offset + batchSize);
@@ -229,19 +103,29 @@ function ArtsdataReconciliationApp() {
             try {
                 const response = await fetch(encodedUrl, { cors: true, headers: headersRequest, method: "GET" });
                 const artsDataResult = await response.json();
-                trueMatches = findTrueMatches(currentRecords, artsDataResult);
-                updateAirtableWithArtsdataIds(table, trueMatches, artsdataIdField);
+                let matchResult = findMatches(currentRecords, artsDataResult);
+                updateAirtableWithArtsdataIds(table, matchResult.matches, artsdataIdField);
+
+                trueMatchCounts = trueMatchCounts + matchResult.singleMatchCount;
+                multiMatchesCounts = multiMatchesCounts + matchResult.multipleCadidateCount;
+                noMatchesCounts = noMatchesCounts + matchResult.noMatchCount;
+
+                setTrueMatchCount(trueMatchCounts);
+                setMultiMatchCount(multiMatchesCounts);
+                setUnmatchedCount(noMatchesCounts);
+                setMultiMatchPercentage((multiMatchesCounts / totalRecordCount) * 100);
             } catch (error) {
                 console.error(`Error occured during reconcilation.
                 error: ${error}
                 Encoded URl : ${encodedUrl} `);
             }
             offset = offset + batchSize;
-            if (offset > totalNames) {
+            const reconciliationProgress = (offset / recordCount) * 100;
+            setReconcliationProgress(reconciliationProgress.toFixed(2));
+            if (offset > recordCount) {
+                console.log("Reconciliation completed")
                 break;
             }
-            const progress = (offset / totalNames) * 100;
-            setReconcliationProgress(progress.toFixed(2));
         }
     }
 
@@ -259,23 +143,26 @@ function ArtsdataReconciliationApp() {
     }
 
 
-    function findTrueMatches(currentRecords, artsdataResult) {
-        let trueMatches = [];
+    function findMatches(currentRecords, artsdataResult) {
+        let matches = [];
         let count = 0;
+        let singleMatchCount = 0;
+        let multipleCadidateCount = 0;
+        let noMatchCount = 0;
         for (const record of currentRecords) {
             const trueMatch = artsdataResult?.[`q${count}`]?.['result'].filter(m => m.match === true)
             if (trueMatch?.length === 1) {
-                setTrueMatchCount(trueMatchCount++);
-                trueMatches.push({ recordId: record.id, artsdataId: trueMatch[0].id });
+                singleMatchCount++;
+                matches.push({ recordId: record.id, artsdataId: trueMatch[0].id });
             } else if (trueMatch?.length === 0) {
-                setMultiMatchCount(multiMatchCount++);
-                trueMatches.push({ recordId: record.id, artsdataId: "" });
+                multipleCadidateCount++;
+                matches.push({ recordId: record.id, artsdataId: "" });
             } else {
-                setUnmatchedCount(unmatchedCount++);
+                noMatchCount++;
             }
             count++;
         }
-        return trueMatches;
+        return { matches, singleMatchCount, multipleCadidateCount, noMatchCount };
     }
 
     function generateQuery(names, type) {
@@ -296,6 +183,144 @@ function ArtsdataReconciliationApp() {
     async function updateRecordsInBatchesAsync(table, recordUpdates) {
         await table.updateRecordsAsync(recordUpdates);
     }
+
+    return (
+        <Container className='content' >
+            <Form>
+                <Row >
+                    <Col><Icon name="chevronRight" size={16} /></Col>
+                    <Col >
+                        <Select
+                            options={endpointOptions}
+                            value={endPoint}
+                            onChange={endPoint => setEndPoint(endPoint)}
+                            width="270px"
+                            marginLeft={"2px"}
+                            size="large"
+                        /></Col>
+                </Row>
+                <Row >
+                    <Col sm={4}>Table</Col>
+                    <Col sm={8}>
+                        <TablePicker
+                            placeholder='Select a table'
+                            table={tableSelected}
+                            onChange={newTable => setTableSelected(newTable)}
+                            width="240px"
+                            size="large"
+                            backgroundColor="white"
+                        />
+                    </Col>
+                </Row>
+                {tableSelected ? (
+                    <Row >
+                        <Col sm={4}>Name</Col>
+                        <Col sm={8}>
+                            <FieldPicker
+                                placeholder='Select a field'
+                                table={table}
+                                field={entityNameField}
+                                onChange={newField => setEntityNameField(newField)}
+                                width="240px"
+                                size="large"
+                            />
+                        </Col>
+                    </Row>
+                ) : (<></>)}
+
+                <Row onChange={onChangeEntityType} style={{ lineHeight: "1.5", paddingTop: "1.5px" }}  >
+                    <Col sm={4}>Type</Col>
+                    <Col sm={8}>
+                        <Row >
+                            <Col sm={1}><input type="radio" value="Person" name="entityType" /></Col>
+                            <Col sm={3}>Person </Col></Row>
+                        <Row >
+                            <Col sm={1} ><input type="radio" value="Place" name="entityType" /></Col>
+                            <Col sm={3}> Place </Col>
+                        </Row>
+                        <Row >
+                            <Col sm={1}><input defaultChecked type="radio" value="Organization" name="entityType" /></Col >
+                            <Col sm={3}> Organization </Col>
+                        </Row>
+                    </Col>
+                </Row>
+                <Row >
+                    <Col sm={4}>Properties</Col>
+                    <Col sm={8}><button className='button1' type="button" disabled={true}>Add property</button></Col>
+                </Row>
+                {tableSelected ? (
+                    <Row  >
+                        <Col sm={4} >Result </Col>
+                        <Col sm={8}>
+                            <FieldPicker
+                                placeholder='Select a field'
+                                table={table}
+                                field={resultField}
+                                onChange={result => setResultField(result)}
+                                width="230px"
+                                size="large"
+                            />
+                        </Col>
+                    </Row>
+                ) : (<></>)}
+                <div >
+                    <input type="checkbox" onChange={value => setReconcileAlways(value)} />
+                    {`  Keep reconciled at all times`}
+                </div>
+                {/* <br /> */}
+                <Row className="justify-content-md-center" xs lg="1">
+                    <Col><button
+                        onClick={onButtonClick}
+                        disabled={!permissionCheck.hasPermission}
+                        className="button2"
+                        type="button"> <b>Reconcile</b>
+                    </button></Col>
+                </Row>
+                {!permissionCheck.hasPermission && permissionCheck.reasonDisplayString}
+            </Form >
+            <br />
+            {
+                (isUpdateInProgress) ? (
+                    <div style={{ lineHeight: '2' }}>
+                        <Row className="justify-content-md-center">
+                            <Col md={{ span: 8 }}><ProgressBar animated now={reconciliationProgress} /></Col>
+                            <Col md={{ span: 1 }} className='clickableText' onClick={onCancelReconciliation} >Cancel</Col>
+                        </Row>
+                        <Row className="justify-content-md-center">{reconciliationProgress}%</Row>
+                        <Container >
+                            <Row style={{ 'textAlign': 'left' }}>
+                                <Col style={{ 'textAlign': 'left', 'marginLeft': '50px' }}>
+                                    <Row >
+                                        <Col sm={3}>{trueMatchCount}</Col>
+                                        <Col sm={9}> matched</Col>
+                                    </Row>
+                                    <Row >
+                                        <Col sm={3} >{unmatchedCount}</Col>
+                                        <Col sm={9}> not matched</Col>
+                                    </Row>
+                                    <Row >
+                                        <Col sm={3}>{multiMatchCount}</Col>
+                                        <Col sm={9}> multiple candidates </Col>
+                                    </Row>
+                                    <Row >
+                                        <Col sm={3}>{multiMatchPercentage}</Col>
+                                        <Col sm={9}> multiMatchPercentage </Col>
+                                    </Row>
+                                </Col>
+                            </Row>
+                            <br />
+                            {(multiMatchPercentage > 10) ? (
+                                <Row>
+                                    <Col>
+                                        <h3 className='h3'>Please add properties to increase matches</h3>
+                                    </Col>
+                                </Row>) : (<></>)}
+                        </Container>
+                    </div>
+                ) : (<></>)
+            }
+        </Container>
+    );
 
 }
 

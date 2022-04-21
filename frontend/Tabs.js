@@ -4,8 +4,6 @@ import { ArtsdataReconciliationApp } from "./ReconciliationApp";
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
 
-import "./styles.css";
-
 function TabComponent() {
 
 
@@ -13,9 +11,10 @@ function TabComponent() {
         { id: uuidv4(), name: "Tab 1", content: <ArtsdataReconciliationApp /> }
     ])
     const [key, setKey] = useState(tabs[0].id);
+    const [editableTab, setEditableTab] = useState(null);
 
-    function handleDoubleClick() {
-        setCurrentTabNameEditable(true);
+    function handleDoubleClick(key) {
+        setEditableTab(key);
     };
 
     function handleEditTabName(e) {
@@ -28,13 +27,18 @@ function TabComponent() {
 
     function createTabs() {
         const allTabs = tabs.map(tab => {
-            return (<Tab key={tab.id} eventKey={tab.id} title={tab.name}>
-                {tab.content}
-            </Tab>)
+            if (editableTab === tab.id) {
+                return (<input />)
+            }
+            return (
+                <Tab key={tab.id} eventKey={tab.id} title={tab.name} onDoubleClick={() => handleDoubleClick(tab.id)}>
+                    {tab.content}
+                </Tab>
+            );
         });
 
         allTabs.push(
-            <Tab key={'addTab'} eventKey={'addTab'} title={'+'} onClick={handleAddTab} onDoubleClick={handleDoubleClick}>
+            <Tab key={'addTab'} eventKey={'addTab'} title={'+'} onClick={handleAddTab} >
             </Tab>
         )
 
@@ -44,7 +48,7 @@ function TabComponent() {
                 onSelect={handleSelectTab}
                 defaultActiveKey={tabs[0].id}
                 className="mb-3"
-                onDoubleClick={handleEditTabName}
+            // onDoubleClick={() => handleDoubleClick(key)}
             >
                 {allTabs}
             </Tabs>
@@ -72,7 +76,7 @@ function TabComponent() {
 
     return (
         <div className="container">
-            <div className="well">
+            <div>
                 {createTabs()}
             </div>
         </div>
