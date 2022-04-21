@@ -13,11 +13,9 @@ window.reconciliationProcessActive = [];
 function ArtsdataReconciliationApp() {
 
     const base = useBase();
-
     const endpointOptions = [
         { value: "ArtsData.ca", label: "Artsdata.ca Reconciliation Service" }
     ];
-
     const headersRequest = {
         "accept": "*/*",
         "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
@@ -48,14 +46,12 @@ function ArtsdataReconciliationApp() {
     let [multiMatchPercentage, setMultiMatchPercentage] = useState(0);
     const [reconciliationProgress, setReconcliationProgress] = useState(0);
 
-
     useEffect(() => {
         setEntityNameField(null);
         setResultField(null);
         setFetchTable(true);
         clearStats();
     }, [tableSelected])
-
 
     if (!!tableSelected && fetchTable) {
         setFetchTable(false);
@@ -96,7 +92,6 @@ function ArtsdataReconciliationApp() {
     function onChangeEntityType(event) {
         setEntityType(event.target.value);
     }
-
 
     async function reconcileAndExtractArtsdataIds(processId, table, records, entityNameField, artsdataIdField, entityType) {
         let trueMatchCounts = 0;
@@ -154,7 +149,6 @@ function ArtsdataReconciliationApp() {
         updateRecordsInBatchesAsync(table, recordUpdates);
     }
 
-
     function findMatches(currentRecords, artsdataResult) {
         let matches = [];
         let count = 0;
@@ -162,15 +156,22 @@ function ArtsdataReconciliationApp() {
         let multipleCadidateCount = 0;
         let noMatchCount = 0;
         for (const record of currentRecords) {
-            const trueMatch = artsdataResult?.[`q${count}`]?.['result'].filter(m => m.match === true)
-            if (trueMatch?.length === 1) {
+            const result = artsdataResult?.[`q${count}`]?.['result'];
+            const trueMatch = result.filter(m => m.match === true)
+            if (result.length === 0) {
+                //if no candidates
+                noMatchCount++;
+                matches.push({ recordId: record.id, artsdataId: '' });
+            }
+            else if (trueMatch?.length === 1) {
+                //if one and only true match
                 singleMatchCount++;
                 matches.push({ recordId: record.id, artsdataId: trueMatch[0].id });
-            } else if (trueMatch?.length === 0) {
+            } else if (trueMatch?.length > 1 || records.length > 0) {
+                //Either more than one true matches
+                //or multiple candidates with no true match
                 multipleCadidateCount++;
                 matches.push({ recordId: record.id, artsdataId: "" });
-            } else {
-                noMatchCount++;
             }
             count++;
         }
@@ -308,7 +309,7 @@ function ArtsdataReconciliationApp() {
                         <Row className="justify-content-md-center">{reconciliationProgress}%</Row>
                         <Container >
                             <Row style={{ 'textAlign': 'left' }}>
-                                <Col style={{ 'textAlign': 'left', 'marginLeft': '200px' }}>
+                                <Col style={{ 'textAlign': 'left', 'marginLeft': '150px' }}>
                                     <Row >
                                         <Col sm={3}>{trueMatchCount}</Col>
                                         <Col sm={9}> matched</Col>
@@ -323,7 +324,6 @@ function ArtsdataReconciliationApp() {
                                     </Row>
                                 </Col>
                             </Row>
-                            <br />
                             {(multiMatchPercentage > 10) ? (
                                 <Row>
                                     <Col>
@@ -336,7 +336,6 @@ function ArtsdataReconciliationApp() {
             }
         </Container>
     );
-
 }
 
 export { ArtsdataReconciliationApp }

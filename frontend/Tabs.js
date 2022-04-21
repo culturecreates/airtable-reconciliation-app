@@ -7,7 +7,6 @@ import CloseButton from 'react-bootstrap/CloseButton'
 
 function TabComponent() {
 
-
     const [tabs, setTabs] = useState([
         { id: uuidv4(), name: "Tab 1", content: <ArtsdataReconciliationApp /> }
     ])
@@ -44,7 +43,12 @@ function TabComponent() {
                 return (
                     <Tab key={tab.id}
                         eventKey={tab.id}
-                        title={<input type="text" name="name" placeholder={tab.name} onBlur={e => handleEditTabName(e.target.value)} />}>
+                        title={
+                            <input type="text" name="name"
+                                placeholder={tab.name}
+                                onBlur={e => handleEditTabName(e.target.value)}
+                            />
+                        }>
                         {tab.content}
                     </Tab>)
             }
@@ -114,7 +118,6 @@ function TabComponent() {
         setKey(updatedTabs[0]?.id);
         createTabs();
     };
-
 
     return (
         <div className="container">
