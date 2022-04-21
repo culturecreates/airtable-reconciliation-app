@@ -48,21 +48,30 @@ function TabComponent() {
                         {tab.content}
                     </Tab>)
             }
+            if (key === tab.id) {
+                return (
+                    <Tab key={tab.id}
+                        eventKey={tab.id}
+                        title={
+                            <div>
+                                {tab.name}
+                                <CloseButton onClick={() => { handleCloseTab(tab) }} />
+                            </div>} >
+                        {tab.content}
+                    </Tab>
+                );
+            }
             return (
                 <Tab key={tab.id}
                     eventKey={tab.id}
-                    title={
-                        <div>
-                            {tab.name}
-                            <CloseButton onClick={() => { handleCloseTab(tab) }} />
-                        </div>} >
+                    title={tab.name}>
                     {tab.content}
                 </Tab>
             );
         });
 
         allTabs.push(
-            <Tab key={'addTab'} eventKey={'addTab'} title={'+'} onClick={handleAddTab} >
+            <Tab key={'addTab'} eventKey={'addTab'} title={<div className="add-tab"><b>+</b></div>} onClick={handleAddTab} >
             </Tab>
         )
 
@@ -84,7 +93,7 @@ function TabComponent() {
         if (key === 'addTab') {
             handleAddTab();
         } else {
-                setKey(key)
+            setKey(key)
         }
     };
 

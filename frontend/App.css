@@ -106,3 +106,16 @@ body {
 .confirm-box {
   top: 100%
 }
+
+.add-tab{
+  font-size:15px;
+}
+
+.btn-close{
+  width: 0px;
+  height: 7px;
+  margin-left: 10px;
+  padding-top: 10px;
+  padding-bottom: 1px;
+  line-height: 1px;
+}
