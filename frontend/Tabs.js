@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { ArtsdataReconciliationApp } from "./ReconciliationApp";
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
+import CloseButton from 'react-bootstrap/CloseButton'
 
 function TabComponent() {
 
@@ -12,10 +13,15 @@ function TabComponent() {
     ])
     const [key, setKey] = useState(tabs[0].id);
     const [editableTab, setEditableTab] = useState(null);
+    const [tabToDelete, setTabToDelete] = useState(null);
 
     function handleDoubleClick(key) {
         setEditableTab(key);
     };
+
+    useEffect(() => {
+        handleSelectTab(tabs[0]?.id);
+    }, [tabToDelete])
 
     function handleEditTabName(tabName) {
         if (!!tabName?.trim()) {
@@ -43,7 +49,13 @@ function TabComponent() {
                     </Tab>)
             }
             return (
-                <Tab key={tab.id} eventKey={tab.id} title={tab.name} >
+                <Tab key={tab.id}
+                    eventKey={tab.id}
+                    title={
+                        <div>
+                            {tab.name}
+                            <CloseButton onClick={() => { handleCloseTab(tab) }} />
+                        </div>} >
                     {tab.content}
                 </Tab>
             );
@@ -72,7 +84,7 @@ function TabComponent() {
         if (key === 'addTab') {
             handleAddTab();
         } else {
-            setKey(key)
+                setKey(key)
         }
     };
 
@@ -85,6 +97,15 @@ function TabComponent() {
         setTabs([...tabs, newTabObject]);
         setKey(newTabObject.id);
     };
+
+    function handleCloseTab(tabToDelete) {
+        setTabToDelete(tabToDelete.id);
+        const updatedTabs = tabs.filter(tab => tab.id !== tabToDelete.id);
+        setTabs(updatedTabs);
+        setKey(updatedTabs[0]?.id);
+        createTabs();
+    };
+
 
     return (
         <div className="container">
