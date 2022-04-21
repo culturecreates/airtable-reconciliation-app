@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import ProgressBar from 'react-bootstrap/ProgressBar'
 import { Col, Container, Form, Row } from 'react-bootstrap';
 import { v4 as uuidv4 } from 'uuid';
+import { confirm } from "react-confirm-box";
 
 const batchSize = 10;
 window.reconciliationProcessActive = [];
@@ -80,12 +81,16 @@ function ArtsdataReconciliationApp() {
         setUpdateInProgress(false);
     }
 
-    function onCancelReconciliation() {
-        const processId = currentProcessId;
-        setReconciliationActiveStatus(processId, false);
-        setUpdateInProgress(false);
-        clearStats();
-        console.log(`Reconciliation process cancelled.`)
+    async function onCancelReconciliation() {
+        const result = await confirm("Are you sure?");
+        if (result) {
+            const processId = currentProcessId;
+            setReconciliationActiveStatus(processId, false);
+            setUpdateInProgress(false);
+            clearStats();
+            console.log(`Reconciliation process cancelled.`)
+        }
+
     }
 
     function onChangeEntityType(event) {

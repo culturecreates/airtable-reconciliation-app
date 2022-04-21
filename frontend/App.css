@@ -3,7 +3,7 @@ body {
 }
 
 .header {
-  padding: 3% 3%;
+  padding: 3% 1%;
   text-align: center;
   background: #a56464;
   color: white;
@@ -96,4 +96,13 @@ body {
   color: #a56464;
   background-color: #fff;
   border-color: #dee2e6 #dee2e6 #fff #fff;
+}
+
+.confirm-box__content {
+  background-color: #ab7171;
+  width: 400px;
+}
+
+.confirm-box {
+  top: 100%
 }
