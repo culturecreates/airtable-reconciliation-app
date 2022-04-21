@@ -186,7 +186,7 @@ function ArtsdataReconciliationApp() {
 
     return (
         <Container className='content' >
-            <Form>
+            <Form className='form'>
                 <Row >
                     <Col><Icon name="chevronRight" size={16} /></Col>
                     <Col >
@@ -194,9 +194,9 @@ function ArtsdataReconciliationApp() {
                             options={endpointOptions}
                             value={endPoint}
                             onChange={endPoint => setEndPoint(endPoint)}
-                            width="270px"
-                            marginLeft={"2px"}
+                            width="550px"
                             size="large"
+
                         /></Col>
                 </Row>
                 <Row >
@@ -206,7 +206,7 @@ function ArtsdataReconciliationApp() {
                             placeholder='Select a table'
                             table={tableSelected}
                             onChange={newTable => setTableSelected(newTable)}
-                            width="240px"
+                            width="380px"
                             size="large"
                             backgroundColor="white"
                         />
@@ -221,7 +221,7 @@ function ArtsdataReconciliationApp() {
                                 table={table}
                                 field={entityNameField}
                                 onChange={newField => setEntityNameField(newField)}
-                                width="240px"
+                                width="380px"
                                 size="large"
                             />
                         </Col>
@@ -244,7 +244,7 @@ function ArtsdataReconciliationApp() {
                         </Row>
                     </Col>
                 </Row>
-                <Row >
+                <Row>
                     <Col sm={4}>Properties</Col>
                     <Col sm={8}><button className='button1' type="button" disabled={true}>Add property</button></Col>
                 </Row>
@@ -257,25 +257,24 @@ function ArtsdataReconciliationApp() {
                                 table={table}
                                 field={resultField}
                                 onChange={result => setResultField(result)}
-                                width="230px"
+                                width="380px"
                                 size="large"
                             />
                         </Col>
                     </Row>
                 ) : (<></>)}
-                <div >
+                <div style={{ textAlign: 'center', lineHeight: 3 }}>
                     <input type="checkbox" onChange={value => setReconcileAlways(value)} />
                     {`  Keep reconciled at all times`}
+                    <Row className="justify-content-md-center" xs lg="1">
+                        <Col><button
+                            onClick={onButtonClick}
+                            disabled={!permissionCheck.hasPermission}
+                            className="button2"
+                            type="button"> <b>Reconcile</b>
+                        </button></Col>
+                    </Row>
                 </div>
-                {/* <br /> */}
-                <Row className="justify-content-md-center" xs lg="1">
-                    <Col><button
-                        onClick={onButtonClick}
-                        disabled={!permissionCheck.hasPermission}
-                        className="button2"
-                        type="button"> <b>Reconcile</b>
-                    </button></Col>
-                </Row>
                 {!permissionCheck.hasPermission && permissionCheck.reasonDisplayString}
             </Form >
             <br />

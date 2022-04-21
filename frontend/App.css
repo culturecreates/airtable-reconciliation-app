@@ -48,17 +48,21 @@ body {
 }
 
 .button1 {
-  font-size: 75%;
-  height: 75%;
-  width: 130%;
+  font-size: 14px;
+  height: 35px;
+  width: 380px;
   border-radius: 3px;
+  text-align:center;
+  line-height: 4px;
 }
 
 .button2 {
   text-align: center;
-  width: 50%;
+  width: 350px;
   background-color: #a56464;
   border-radius: 3px;
+  height:45px;
+  line-height: 4px;
 }
 
 .whole-content {
@@ -73,4 +77,8 @@ body {
   cursor: pointer;
   font-size: 90%;
   line-height: 4;
+}
+
+.form{
+  text-align: left;
 }
