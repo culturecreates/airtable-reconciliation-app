@@ -1,4 +1,4 @@
-import { useBase, Icon, useRecords, TablePicker, FieldPicker, Select } from '@airtable/blocks/ui';
+import {Icon, Text, useBase, useRecords, TablePicker, FieldPicker,FormField, SelectButtons, Button, Select, Switch } from '@airtable/blocks/ui';
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProgressBar from 'react-bootstrap/ProgressBar'
@@ -14,7 +14,8 @@ function ArtsdataReconciliationApp() {
 
     const base = useBase();
     const endpointOptions = [
-        { value: "ArtsData.ca", label: "Artsdata.ca Reconciliation Service" }
+        { value: "Artsdata.ca", label: "Artsdata.ca" },
+        { value: "Wikidata.org", label: "Wikidata.org (en)" }
     ];
     const headersRequest = {
         "accept": "*/*",
@@ -198,104 +199,116 @@ function ArtsdataReconciliationApp() {
     }
 
     function clearStats() {
-        setTrueMatchCount(0);
-        setMultiMatchCount(0);
-        setUnmatchedCount(0);
-        setMultiMatchPercentage(0);
+        // setTrueMatchCount(0);
+        // setMultiMatchCount(0);
+        // setUnmatchedCount(0);
+        // setMultiMatchPercentage(0);
     }
+
+    
+    const typeOptions = [
+        { value: "Person", label: "Person" },
+        { value: "Place", label: "Place" },
+        { value: "Organization", label: "Organization" }
+      ];
+
+      const SelectButtonsReconType = () => {
+        const [value, setValue] = useState( typeOptions[0].value);
+        return (
+          <SelectButtons
+            value={value}
+            onChange={newValue => setValue(newValue)}
+            options={typeOptions}
+            width="320px"
+          />
+        );
+      };
+
+      const SwitchKeepReconcilied = () => {
+        const [isEnabled, setIsEnabled] = useState(false);
+        return (
+          <Switch
+            value={isEnabled}
+            onChange={newValue => setIsEnabled(newValue)}
+            label="Keep reconciled at all times"
+            size="large"
+            backgroundColor="transparent"
+            width="320px"
+          />
+        );
+      };
 
     return (
         <Container className='content' >
             <Form className='form'>
+                <FormField label="Reconciliation service">
+                    <Select
+                        options={endpointOptions}
+                        value={endPoint}
+                        onChange={endPoint => setEndPoint(endPoint)}
+                        size="large"
+                    />
+                </FormField>
+                <FormField label="Type">
+                    {SelectButtonsReconType()} 
+                </FormField>
 
-                <Row >
-                    <Col sm={4}>Table</Col>
-                    <Col sm={8}>
-                        <TablePicker
-                            placeholder='Select a table'
-                            table={tableSelected}
-                            onChange={newTable => setTableSelected(newTable)}
-                            width="380px"
+                <FormField label="Table">
+                    <TablePicker
+                        placeholder='Select a table'
+                        table={tableSelected}
+                        onChange={newTable => setTableSelected(newTable)}
+                        /*width="380px" */
+                        size="large"
+                        backgroundColor="white"
+                    />
+                </FormField>
+
+            
+                {tableSelected ? (
+                    <FormField label="Field to reconcile">
+                        <FieldPicker
+                            placeholder='Select a field to reconcile'
+                            table={table}
+                            field={entityNameField}
+                            onChange={newField => setEntityNameField(newField)}
+                            // width="380px"
                             size="large"
-                            backgroundColor="white"
                         />
-                    </Col>
-                </Row>
-                {tableSelected ? (
-                    <Row >
-                        <Col sm={4}>Name</Col>
-                        <Col sm={8}>
-                            <FieldPicker
-                                placeholder='Select a field'
-                                table={table}
-                                field={entityNameField}
-                                onChange={newField => setEntityNameField(newField)}
-                                width="380px"
-                                size="large"
-                            />
-                        </Col>
-                    </Row>
-                ) : (<></>)}
-                <Row >
-                    <Col><Icon name="chevronRight" size={16} /></Col>
-                    <Col >
-                        <Select
-                            options={endpointOptions}
-                            value={endPoint}
-                            onChange={endPoint => setEndPoint(endPoint)}
-                            width="550px"
-                            size="large"
-
-                        /></Col>
-                </Row>
-
+                     </FormField>
+                ) : (<></>)}         
+               
+                {/* 
                 <Row onChange={onChangeEntityType} style={{ lineHeight: "1.5", paddingTop: "1.5px" }}  >
-                    <Col sm={4}>Type</Col>
-                    <Col sm={8}>
-                        <Row >
-                            <Col sm={1}><input type="radio" value="Person" name="entityType" /></Col>
-                            <Col sm={3}>Person </Col></Row>
-                        <Row >
-                            <Col sm={1} ><input type="radio" value="Place" name="entityType" /></Col>
-                            <Col sm={3}> Place </Col>
-                        </Row>
-                        <Row >
-                            <Col sm={1}><input defaultChecked type="radio" value="Organization" name="entityType" /></Col >
-                            <Col sm={3}> Organization </Col>
-                        </Row>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col sm={4}>Properties</Col>
-                    <Col sm={8}><button className='button1' type="button" disabled={true}>Add property</button></Col>
-                </Row>
-                {tableSelected ? (
-                    <Row  >
-                        <Col sm={4} >Result </Col>
-                        <Col sm={8}>
-                            <FieldPicker
-                                placeholder='Select a field'
-                                table={table}
-                                field={resultField}
-                                onChange={result => setResultField(result)}
-                                width="380px"
-                                size="large"
-                            />
-                        </Col>
-                    </Row>
-                ) : (<></>)}
-                <div style={{ textAlign: 'center', lineHeight: 3 }}>
-                    <input type="checkbox" onChange={value => setReconcileAlways(value)} />
-                    {`  Keep reconciled at all times`}
-                    <Row className="justify-content-md-center" xs lg="1">
-                        <Col><button
-                            onClick={onButtonClick}
-                            disabled={!permissionCheck.hasPermission}
-                            className="button2"
-                            type="button"> <b>Reconcile</b>
-                        </button></Col>
-                    </Row>
-                </div>
+                </Row> */}       
+               
+                {entityNameField ? (
+                    <FormField label="Store results">
+                        <FieldPicker
+                            placeholder='Select field to store result'
+                            table={table}
+                            field={resultField}
+                            onChange={result => setResultField(result)}
+                            // width="380px"
+                            size="large"
+                        />
+                    </FormField>
+                   
+                ) : (<></>)} 
+               
+              
+               <center> 
+                    <Button
+                        onClick={onButtonClick}
+                        disabled={!permissionCheck.hasPermission}
+                        className="button2"
+                        type="button"
+                        variant="primary"
+                        size="large"
+                    >
+                    Reconcile
+                    </Button>
+                    </center>
                 {!permissionCheck.hasPermission && permissionCheck.reasonDisplayString}
             </Form >
             <br />
@@ -306,34 +319,41 @@ function ArtsdataReconciliationApp() {
                             <Col md={{ span: 10 }}><ProgressBar animated now={reconciliationProgress} /></Col>
                             <Col md={{ span: 2 }} className='clickableText' onClick={onCancelReconciliation} >Cancel</Col>
                         </Row>
-                        <Row className="justify-content-md-center">{reconciliationProgress}%</Row>
+                        {/* <Row className="justify-content-md-center">{reconciliationProgress}%</Row> */}
                         <Container >
                             <Row style={{ 'textAlign': 'left' }}>
-                                <Col style={{ 'textAlign': 'left', 'marginLeft': '150px' }}>
+                                <Col style={{ 'textAlign': 'left', 'marginLeft': '20px' }}>
                                     <Row >
-                                        <Col sm={3}>{trueMatchCount}</Col>
-                                        <Col sm={9}> matched</Col>
+                                    <span>{trueMatchCount} matched</span>
                                     </Row>
                                     <Row >
-                                        <Col sm={3} >{unmatchedCount}</Col>
-                                        <Col sm={9}> not matched</Col>
+                                    <span> {unmatchedCount} not matched</span>
                                     </Row>
                                     <Row >
-                                        <Col sm={3}>{multiMatchCount}</Col>
-                                        <Col sm={9}> multiple candidates </Col>
+                                        <span>{multiMatchCount} multiple candidates <a href="#">fix</a></span>
+                                    </Row>
+                                    <Row >
+                                        <span>0 manually entered <a href="#">clear</a></span>
                                     </Row>
                                 </Col>
                             </Row>
-                            {(multiMatchPercentage > 10) ? (
+                           
+                        </Container>
+                        <br />
+                        {(multiMatchPercentage > 10) ? (
+                            <Container >
                                 <Row>
                                     <Col>
-                                        <h3 className='h3'>Please add properties to increase matches</h3>
+                                   <Text size="large">Tip: add <a href="#">properties</a> to increase matches!</Text>
                                     </Col>
-                                </Row>) : (<></>)}
-                        </Container>
+                                </Row>
+                            </Container> 
+                        ) : (<></>)}         
                     </div>
                 ) : (<></>)
             }
+             <br />
+            <span> {SwitchKeepReconcilied()}</span>
         </Container>
     );
 }

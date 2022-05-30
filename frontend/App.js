@@ -7,7 +7,7 @@ function App() {
 
     return (
             <div className='whole-content'>
-                <Header />
+                {/* <Header /> */}
                 <div className="row">
                     <TabComponent />
                 </div>
